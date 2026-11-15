@@ -1,0 +1,21 @@
+go mod init platform_ticket/backend - npm init -y
+
+go run . - npm run dev
+
+go fmt ./... - formatting
+
+packages - modules
+
+go install github.com/air-verse/air@latest - installing packages
+
+go version	Check Go version
+go mod init <name>	Initialize module
+go run .	Run application
+go run main.go	Run a specific file
+go build	Compile application
+go test ./...	Run all tests
+go fmt ./...	Format all packages
+go mod tidy	Clean dependencies
+go get <package>	Add/update dependency
+go vet ./...	Check suspicious code
+air	Run with live reload
