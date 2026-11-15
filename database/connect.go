@@ -4,22 +4,11 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/joho/godotenv"
 )
 
-func connectDB() *pgxpool.Pool {
-
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading DB Url")
-	}
-
-	// Getting the DB URL
-	dbUrl := os.Getenv("DB_URL")
-
+func ConnectDB(dbUrl string) *pgxpool.Pool {
 	// Connection pool
 	ctx := context.Background()
 
