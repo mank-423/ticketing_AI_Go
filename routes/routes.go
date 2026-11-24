@@ -5,10 +5,11 @@ import (
 	"platform_ticket/backend/handlers"
 )
 
-func Router() *http.ServeMux {
+func Router(h *handlers.Handler) *http.ServeMux {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/health", handlers.HealthCheckup)
+	mux.HandleFunc("POST /register", h.RegisterUser)
 
 	return mux
 }

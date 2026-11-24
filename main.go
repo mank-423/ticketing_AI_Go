@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"platform_ticket/backend/database"
+	"platform_ticket/backend/handlers"
 	"platform_ticket/backend/routes"
 
 	"github.com/joho/godotenv"
@@ -29,8 +30,10 @@ func main() {
 	db := database.ConnectDB(dbUrl)
 	defer db.Close()
 
+	handler := handlers.New(db)
+
 	// importing routes
-	router := routes.Router()
+	router := routes.Router(handler)
 
 	err = http.ListenAndServe(":"+port, router)
 	if err != nil {
