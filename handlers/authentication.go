@@ -1,7 +1,11 @@
 package handlers
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
 	"database/sql"
+	"encoding/base64"
+	"encoding/hex"
 	"encoding/json"
 	"net/http"
 
@@ -93,13 +97,17 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get payload items
 	email := req.Email
 	password := req.Password
 
-	query := `SELECT password_hash from user where email=$1`
+	query := `SELECT user_id, password_hash from user where email=$1`
 
 	var hashValueUser string
-	err = h.DB.QueryRow(r.Context(), query, email).Scan(&hashValueUser)
+	var userID string
+
+	// Look for user
+	err = h.DB.QueryRow(r.Context(), query, email).Scan(&userID, &hashValueUser)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -111,6 +119,7 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Compare the password
 	err = bcrypt.CompareHashAndPassword([]byte(hashValueUser), []byte(password))
 
 	if err != nil {
@@ -118,10 +127,37 @@ func (h *Handler) LoginUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// create token
+	buff := make([]byte, 32)
+	_, err = rand.Read(buff)
+
+	if err != nil {
+		http.Error(w, "Error token generation", http.StatusInternalServerError)
+		return
+	}
+
+	rawToken := base64.RawURLEncoding.EncodeToString(buff) //client token
+	hash := sha256.Sum256([]byte(rawToken))                // hash the string
+	hashStr := hex.EncodeToString(hash[:])                 //encode the hash
+
+	query = `
+		insert into user_sessions(user_id, token_hash, expires_at)
+		values($1, $2, NOW() + INTERVAL '24 hours')
+	`
+
+	// insert into table
+	_, err = h.DB.Exec(r.Context(), query, userID, hashStr)
+
+	if err != nil {
+		http.Error(w, "Error creating session", http.StatusInternalServerError)
+		return
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(map[string]string{
-		"email":   email,
-		"message": "Login successful!",
+		"email":        email,
+		"access-token": rawToken,
+		"message":      "Login successful!",
 	})
 
 }

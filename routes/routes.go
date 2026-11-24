@@ -10,6 +10,7 @@ func Router(h *handlers.Handler) *http.ServeMux {
 
 	mux.HandleFunc("/health", handlers.HealthCheckup)
 	mux.HandleFunc("POST /register", h.RegisterUser)
+	mux.HandleFunc("POST /login", h.LoginUser)
 
 	return mux
 }
